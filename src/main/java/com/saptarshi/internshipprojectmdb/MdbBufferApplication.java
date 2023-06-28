@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan(basePackages = "com.saptarshi.internshipprojectmdb")
 @EnableScheduling
 public class MdbBufferApplication{
-
     public static void main(String[] args) {
         SpringApplication.run(MdbBufferApplication.class, args);
     }

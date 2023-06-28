@@ -13,7 +13,7 @@ public class Batch {
     private String id;
     private Integer size;
     private List<Payload> requests;
-    private Instant bufferInsertionTime;
+//    private Instant bufferInsertionTime;
 
     public String getId() {
         return id;
@@ -31,13 +31,13 @@ public class Batch {
         this.requests = requests;
     }
 
-    public Instant getBufferInsertionTime() {
-        return bufferInsertionTime;
-    }
-
-    public void setBufferInsertionTime(Instant bufferInsertionTime) {
-        this.bufferInsertionTime = bufferInsertionTime;
-    }
+//    public Instant getBufferInsertionTime() {
+//        return bufferInsertionTime;
+//    }
+//
+//    public void setBufferInsertionTime(Instant bufferInsertionTime) {
+//        this.bufferInsertionTime = bufferInsertionTime;
+//    }
 
     public Integer getSize() {
         return size;

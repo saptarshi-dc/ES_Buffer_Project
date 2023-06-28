@@ -13,7 +13,7 @@ public class Payload {
 
     private String data;
     private Instant creationTime;
-    private Instant bufferInsertionTime;
+//    private Instant bufferInsertionTime;
     private Instant esInsertionTime;
 
     public Instant getCreationTime() {
@@ -24,13 +24,13 @@ public class Payload {
         this.creationTime = creationTime;
     }
 
-    public Instant getBufferInsertionTime() {
-        return bufferInsertionTime;
-    }
+//    public Instant getBufferInsertionTime() {
+//        return bufferInsertionTime;
+//    }
 
-    public void setBufferInsertionTime(Instant bufferInsertionTime) {
-        this.bufferInsertionTime = bufferInsertionTime;
-    }
+//    public void setBufferInsertionTime(Instant bufferInsertionTime) {
+//        this.bufferInsertionTime = bufferInsertionTime;
+//    }
 
     public Instant getEsInsertionTime() {
         return esInsertionTime;
@@ -46,7 +46,7 @@ public class Payload {
                 "id=" + id +
                 ", data='" + data + '\'' +
                 ", creationTime=" + creationTime +
-                ", bufferInsertionTime=" + bufferInsertionTime +
+//                ", bufferInsertionTime=" + bufferInsertionTime +
                 ", esInsertionTime=" + esInsertionTime +
                 '}';
     }

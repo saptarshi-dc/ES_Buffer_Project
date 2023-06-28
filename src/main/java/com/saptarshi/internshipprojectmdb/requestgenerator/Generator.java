@@ -43,7 +43,7 @@ public class Generator {
 
     public int generateNewRate(){
 //        return 60;
-        return random.nextInt(10)+1;
+        return random.nextInt(90)+10;
     }
 
 }
