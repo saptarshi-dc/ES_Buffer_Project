@@ -189,7 +189,7 @@ public class ChartGenerator {
         renderer.setDrawBarOutline(false);
         renderer.setShadowVisible(false);
         plot.setRenderer(renderer);
-        NumberAxis rangeAxis = (NumberAxis)plot.getRangeAxis(); // Get the range axis
+//        NumberAxis rangeAxis = (NumberAxis)plot.getRangeAxis(); // Get the range axis
 //        rangeAxis.setTickUnit(new NumberTickUnit(1000));
 
 

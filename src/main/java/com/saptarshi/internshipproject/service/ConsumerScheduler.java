@@ -68,7 +68,7 @@ public class ConsumerScheduler {
             }
             batchesConsumedAfter=(long)mongoBufferConsumer.getBatchnumber();
             consumerStats.setBatchesConsumedPerIteration(iterationNo,batchesConsumedAfter-batchesConsumedBefore);
-            LOGGER.info("Number of documents indexed into Elasticsearch = {}",MongoBufferConsumer.getBatchnumber());
+            LOGGER.info("Number of documents indexed into Elasticsearch = {}",batchesConsumedAfter*consumerBatchSize);
             if(producerScheduler.isRunningStatus()==false&& MongoBufferProducer.getBatchnumber()<=MongoBufferConsumer.getBatchnumber()) {
                 setRunningStatus(false);
             }
