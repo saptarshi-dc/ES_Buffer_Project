@@ -17,9 +17,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistrar;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import org.springframework.kafka.support.KafkaHeaders;
+
 
 @Component
 public class KafkaBufferConsumer{
@@ -36,8 +43,10 @@ public class KafkaBufferConsumer{
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER= LoggerFactory.getLogger(KafkaBufferConsumer.class);
 
-    @KafkaListener(id="kafkaBuffer",topics = "requestcollection", groupId = "consumerGroup",autoStartup = "false")
+    @KafkaListener(topics = "requestcollection", groupId = "consumerGroup",autoStartup = "false")
     public void consume(Batch batch, Acknowledgment acknowledgment) {
+//        System.out.println("Starting new consumer");
+//        System.out.println("consumer id="+consumerId);
         long batchProcessingStartTime=System.currentTimeMillis();
         BulkRequest br = new BulkRequest();
         for (Payload request : batch.getRequests()) {
@@ -63,9 +72,9 @@ public class KafkaBufferConsumer{
             batchnumber++;
             acknowledgment.acknowledge();
 
-            consumerStats.setBatchProcessingTime(batchnumber,batchProcessingEndTime-batchProcessingStartTime);
-            consumerStats.setEsBatchTime(batchnumber,esInsertionEndTime-esInsertionStartTime);
-            consumerStats.setBatchTotalTime(batchnumber,esInsertionEndTime-batch.getCreationTime());
+            consumerStats.setBatchProcessingTime(batch.getBatchnumber(),batchProcessingEndTime-batchProcessingStartTime);
+            consumerStats.setEsBatchTime(batch.getBatchnumber(),esInsertionEndTime-esInsertionStartTime);
+            consumerStats.setBatchTotalTime(batch.getBatchnumber(),esInsertionEndTime-batch.getCreationTime());
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);

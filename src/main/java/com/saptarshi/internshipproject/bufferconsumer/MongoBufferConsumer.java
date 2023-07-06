@@ -92,7 +92,6 @@ public class MongoBufferConsumer {
                 long esInsertionEndTime = System.currentTimeMillis();
                 batchnumber++;
 
-
                 consumerStats.setBatchProcessingTime(batch.getBatchnumber(), batchProcessingEndTime - batchProcessingStartTime);
                 consumerStats.setEsBatchTime(batch.getBatchnumber(), esInsertionEndTime - esInsertionStartTime);
                 consumerStats.setBatchTotalTime(batch.getBatchnumber(), esInsertionEndTime - batch.getCreationTime());

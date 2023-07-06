@@ -51,7 +51,7 @@ public class MongoBufferProducer implements BufferProducer {
         batch.setRequests(requests);
         batch.setSize(requests.size());
         batch.setBatchnumber(batchnumber+1);
-        batch.setConsumedBy(0);
+//        batch.setConsumedBy(0);
 
 //        long batchCreationEndTime=System.nanoTime();
         long batchCreationEndTime = System.currentTimeMillis();
