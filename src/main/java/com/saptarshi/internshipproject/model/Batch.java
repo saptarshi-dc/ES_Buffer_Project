@@ -10,6 +10,7 @@ public class Batch {
     @Id
     private String id;
     private Integer batchnumber;
+    private Integer consumedBy;
     private Integer size;
     private List<Payload> requests;
 //    private Instant bufferInsertionTime;
@@ -52,5 +53,13 @@ public class Batch {
 
     public List<Payload> getRequests() {
         return requests;
+    }
+
+    public Integer getConsumedBy() {
+        return consumedBy;
+    }
+
+    public void setConsumedBy(Integer consumedBy) {
+        this.consumedBy = consumedBy;
     }
 }

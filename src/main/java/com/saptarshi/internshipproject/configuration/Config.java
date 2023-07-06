@@ -11,6 +11,7 @@ import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 
 import java.time.Duration;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
 @ComponentScan(basePackages = {"com.saptarshi.internshipproject"})
@@ -24,12 +25,15 @@ public class Config extends AbstractElasticsearchConfiguration {
 
         final ClientConfiguration config=ClientConfiguration.builder()
                 .connectedTo(elasticsearchUrl)
-                .withConnectTimeout(Duration.ofSeconds(10))
+                .withSocketTimeout(Duration.ofSeconds(60))
                 .build();
 
         return RestClients.create(config).rest();
     }
-
+    @Bean
+    public ReentrantLock lock(){
+        return new ReentrantLock();
+    }
 }
 //@Configuration
 //@ComponentScan(basePackages = {"com.saptarshi.internshipproject"})

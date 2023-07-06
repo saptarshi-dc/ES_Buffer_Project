@@ -24,7 +24,7 @@ public class ConsumerScheduler {
     private KafkaBufferConsumer kafkaBufferConsumer;
     private ScheduledExecutorService consumerExecutorService;
     private ScheduledExecutorService consumerStopExecutorService;
-    private ScheduledFuture<?> consumerTask;
+    private ScheduledFuture<?>[] consumerTask;
     @Autowired
     private ConsumerStats consumerStats;
     private Integer iterationNo;
@@ -41,38 +41,48 @@ public class ConsumerScheduler {
     private int producerBatchSize;
     @Value("${consumer.batch.size}")
     private int consumerBatchSize;
+    private int consumers;
     private static final Logger LOGGER=LoggerFactory.getLogger(ConsumerScheduler.class);
 
     @Autowired
-    public ConsumerScheduler(MongoBufferConsumer mongoBufferConsumer,KafkaBufferConsumer kafkaBufferConsumer,Shutdown shutdown) {
+    public ConsumerScheduler(@Value("${consumers}")int consumers,MongoBufferConsumer mongoBufferConsumer,KafkaBufferConsumer kafkaBufferConsumer,Shutdown shutdown) {
         this.mongoBufferConsumer=mongoBufferConsumer;
         this.kafkaBufferConsumer=kafkaBufferConsumer;
-        consumerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.consumers=consumers;
+//        consumers=10;
+//        consumerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        consumerExecutorService=Executors.newScheduledThreadPool(consumers);
         consumerStopExecutorService = Executors.newSingleThreadScheduledExecutor();
         runningStatus=true;
+        consumerTask=new ScheduledFuture<?>[consumers];
         iterationNo=0;
     }
-//    @Scheduled(fixedRate = 4000)
+    //    @Scheduled(fixedRate = 4000)
     public void mongoConsumerScheduler(){
         if(isRunningStatus()==false)
             return;
         iterationNo++;
         batchesConsumedBefore=(long)mongoBufferConsumer.getBatchnumber();
-        consumerTask=consumerExecutorService.schedule(mongoBufferConsumer::consume,0,TimeUnit.SECONDS);
+        for(int i=0;i<consumers;i++)
+            consumerTask[i]=consumerExecutorService.schedule(mongoBufferConsumer::consume,0,TimeUnit.SECONDS);
 
-        consumerStopExecutorService.schedule(() -> {
-            System.out.println("Entered consumer shutdown");
-            if (!consumerTask.isDone()) {
-                consumerTask.cancel(false);
-                mongoBufferConsumer.setCancelled(true);
-            }
-            batchesConsumedAfter=(long)mongoBufferConsumer.getBatchnumber();
-            consumerStats.setBatchesConsumedPerIteration(iterationNo,batchesConsumedAfter-batchesConsumedBefore);
-            LOGGER.info("Number of documents indexed into Elasticsearch = {}",batchesConsumedAfter*consumerBatchSize);
-            if(producerScheduler.isRunningStatus()==false&& MongoBufferProducer.getBatchnumber()<=MongoBufferConsumer.getBatchnumber()) {
-                setRunningStatus(false);
-            }
+        for(int i=0;i<consumers;i++)
+        {
+            int finalI = i;
+            consumerStopExecutorService.schedule(() -> {
+                System.out.println("Entered consumer shutdown");
+                if (!consumerTask[finalI].isDone()) {
+                    consumerTask[finalI].cancel(false);
+                    mongoBufferConsumer.setCancelled(true);
+                }
+                batchesConsumedAfter=(long)mongoBufferConsumer.getBatchnumber();
+                consumerStats.setBatchesConsumedPerIteration(iterationNo,batchesConsumedAfter-batchesConsumedBefore);
+                LOGGER.info("Number of documents indexed into Elasticsearch = {}",batchesConsumedAfter*consumerBatchSize);
+                if(producerScheduler.isRunningStatus()==false&& MongoBufferProducer.getBatchnumber()<=MongoBufferConsumer.getBatchnumber()) {
+                    setRunningStatus(false);
+                }
             }, 20, TimeUnit.SECONDS);
+        }
     }
 
     public void kafkaConsumerScheduler(){

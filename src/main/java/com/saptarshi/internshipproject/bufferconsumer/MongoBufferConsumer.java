@@ -18,8 +18,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 public class MongoBufferConsumer {
@@ -33,8 +36,13 @@ public class MongoBufferConsumer {
     private RestHighLevelClient client;
     @Autowired
     private ConsumerStats consumerStats;
+    @Value("${consumers}")
+    private int consumers;
+    @Autowired
+    private ReentrantLock lock;
     private boolean isCancelled;
     private static int batchnumber = 0;
+//    private int threadno;
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBufferConsumer.class);
 
@@ -43,16 +51,22 @@ public class MongoBufferConsumer {
         isCancelled = false;
         while (!isCancelled) {
 //            long batchProcessingStartTime=System.nanoTime();
+//            lock.lock();
             long batchProcessingStartTime = System.currentTimeMillis();
-
             Query query = new Query();
-            query.with(Sort.by("$natural").ascending());
+//            System.out.println("Thread number="+threadno);
+//            query.addCriteria(Criteria.where("batchnumber").mod(consumers,threadno));
+            query.with(Sort.by(Sort.Direction.ASC, "batchnumber"));
+            lock.lock();
             Batch batch = mongoTemplate.findOne(query, Batch.class, collectionName);
-            if (batch == null)
+            if (batch == null) {
+                lock.unlock();
                 continue;
+            }
+            mongoTemplate.remove(batch, collectionName);
+            lock.unlock();
 
             BulkRequest br = new BulkRequest();
-
 
             for (Payload request : batch.getRequests()) {
                 try {
@@ -77,13 +91,14 @@ public class MongoBufferConsumer {
 //                long esInsertionEndTime=System.nanoTime();
                 long esInsertionEndTime = System.currentTimeMillis();
                 batchnumber++;
-                mongoTemplate.remove(batch, collectionName);
 
-                consumerStats.setBatchProcessingTime(batchnumber, batchProcessingEndTime - batchProcessingStartTime);
-                consumerStats.setEsBatchTime(batchnumber, esInsertionEndTime - esInsertionStartTime);
-                consumerStats.setBatchTotalTime(batchnumber, esInsertionEndTime - batch.getCreationTime());
+
+                consumerStats.setBatchProcessingTime(batch.getBatchnumber(), batchProcessingEndTime - batchProcessingStartTime);
+                consumerStats.setEsBatchTime(batch.getBatchnumber(), esInsertionEndTime - esInsertionStartTime);
+                consumerStats.setBatchTotalTime(batch.getBatchnumber(), esInsertionEndTime - batch.getCreationTime());
 
             } catch (Exception e) {
+                mongoTemplate.save(batch, collectionName);
                 LOGGER.error(e.getMessage(), e);
             }
         }
@@ -97,4 +112,12 @@ public class MongoBufferConsumer {
     public void setCancelled(boolean cancelled) {
         isCancelled = cancelled;
     }
+
+//    public int getThreadno() {
+//        return threadno;
+//    }
+//
+//    public void setThreadno(int threadno) {
+//        this.threadno = threadno;
+//    }
 }

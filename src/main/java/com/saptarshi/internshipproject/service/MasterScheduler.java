@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 public class MasterScheduler implements CommandLineRunner {
     @Value("${buffer.type}")
     private String bufferType;
+    @Value("${consumers}")
+    private int consumers;
     @Autowired
     private ProducerScheduler producerScheduler;
     @Autowired
@@ -100,9 +102,9 @@ public class MasterScheduler implements CommandLineRunner {
             chartGenerator.generateLineChart(producerStats.getBatchesCreatedPerMinute(),"Producer: Number of batches created in every 5 seconds interval","Interval number","Number of batches created");
             chartGenerator.generateLineChart(consumerStats.getBatchProcessingTime(),"Consumer: Batch Processing Time","Batch number","Time in Milliseconds");
             chartGenerator.generateLineChart(consumerStats.getEsBatchTime(),"Consumer: ElasticSearch Indexing Time","Batch number","Time in Milliseconds");
-            chartGenerator.generateLineChart(consumerStats.getBatchesConsumedPerIteration(),"Consumer: Number of batches consumed per iteration of consumer process","Iteration number","Number of batches consumed");
+//            chartGenerator.generateLineChart(consumerStats.getBatchesConsumedPerIteration(),"Consumer: Number of batches consumed per iteration of consumer process","Iteration number","Number of batches consumed");
 //            chartGenerator.generateLineChartWithBackground(consumerStats.getBatchTotalTime(),"Consumer: Time taken for each batch from creation to indexing","Batch number","Time in Milliseconds",producerStats.getIntervals());
-            chartGenerator.generateLineChartWithVertical(consumerStats.getBatchTotalTime(),"Consumer: Time taken for each batch from creation to indexing","Producer Running Time","Indexing Time in Milliseconds",producerStats.getIntervals());
+            chartGenerator.generateLineChartWithVertical(consumerStats.getBatchTotalTime(),"Consumer - "+consumers+"threads: Time taken for each batch from creation to indexing","Producer Running Time","Indexing Time in Milliseconds",producerStats.getIntervals());
             shutdown.stopApplication();
         }
     }
