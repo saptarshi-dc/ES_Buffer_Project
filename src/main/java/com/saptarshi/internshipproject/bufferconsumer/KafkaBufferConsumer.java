@@ -43,7 +43,7 @@ public class KafkaBufferConsumer{
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER= LoggerFactory.getLogger(KafkaBufferConsumer.class);
 
-    @KafkaListener(topics = "requestcollection", groupId = "consumerGroup",autoStartup = "false")
+    @KafkaListener(id="kafkaBuffer",topics = "requestcollection", groupId = "consumerGroup",autoStartup = "true")
     public void consume(Batch batch, Acknowledgment acknowledgment) {
 //        System.out.println("Starting new consumer");
 //        System.out.println("consumer id="+consumerId);

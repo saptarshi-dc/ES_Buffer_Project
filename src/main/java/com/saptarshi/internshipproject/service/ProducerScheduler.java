@@ -38,12 +38,10 @@ public class ProducerScheduler {
     private Integer intervalNo;
     private Long batchCountBefore;
     private Long batchCountAfter;
-
-//    @Scheduled(fixedRate = 5000)
     public void updateRate() {
         stopExecution();
         rate = generator.generateNewRate();
-        System.out.println("New rate=" + (60000 / (10*rate))*producerBatchSize + " requests per minute");
+        System.out.println("New rate=" + (60000 / (10*rate))*producerBatchSize + " documents per minute");
         startExecution();
     }
 

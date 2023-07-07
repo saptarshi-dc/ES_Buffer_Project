@@ -97,14 +97,14 @@ public class MasterScheduler implements CommandLineRunner {
             LOGGER.info("Time for each batch from start to finish:\n{}",consumerStats.getBatchTotalTime().toString());
 //            LOGGER.info("Number of batches consumed per iteration:\n{}",consumerStats.getBatchesConsumedPerIteration().toString());
 
-            chartGenerator.generateLineChart(producerStats.getBatchCreationTime(),"Producer: Batch Creation Time","Batch number","Time in Milliseconds");
-            chartGenerator.generateLineChart(producerStats.getBufferBatchTime(),"Producer: Buffer Insertion Time","Batch number","Time in Milliseconds");
+            chartGenerator.generateLineChart(producerStats.getBatchCreationTime(),"Producer: Batch Creation Time","Batch number","Time taken in Milliseconds");
+            chartGenerator.generateLineChart(producerStats.getBufferBatchTime(),"Producer: Buffer Insertion Time","Batch number","Time taken in Milliseconds");
             chartGenerator.generateLineChart(producerStats.getBatchesCreatedPerMinute(),"Producer: Number of batches created in every 5 seconds interval","Interval number","Number of batches created");
-            chartGenerator.generateLineChart(consumerStats.getBatchProcessingTime(),"Consumer: Batch Processing Time","Batch number","Time in Milliseconds");
-            chartGenerator.generateLineChart(consumerStats.getEsBatchTime(),"Consumer: ElasticSearch Indexing Time","Batch number","Time in Milliseconds");
-//            chartGenerator.generateLineChart(consumerStats.getBatchesConsumedPerIteration(),"Consumer: Number of batches consumed per iteration of consumer process","Iteration number","Number of batches consumed");
+            chartGenerator.generateLineChart(consumerStats.getBatchProcessingTime(),"Consumer: Batch Processing Time","Batch number","Time taken in Milliseconds");
+            chartGenerator.generateLineChart(consumerStats.getEsBatchTime(),"Consumer: ElasticSearch Indexing Time","Batch number","Time taken in Milliseconds");
+            chartGenerator.generateLineChart(consumerStats.getBatchesConsumedPerIteration(),"Consumer: Number of batches consumed per iteration of consumer process","Iteration number","Number of batches consumed");
 //            chartGenerator.generateLineChartWithBackground(consumerStats.getBatchTotalTime(),"Consumer: Time taken for each batch from creation to indexing","Batch number","Time in Milliseconds",producerStats.getIntervals());
-            chartGenerator.generateLineChartWithVertical(consumerStats.getBatchTotalTime(),"Consumer - "+consumers+"threads: Time taken for each batch from creation to indexing","Producer Running Time","Indexing Time in Milliseconds",producerStats.getIntervals());
+            chartGenerator.generateLineChartWithVertical(consumerStats.getBatchTotalTime(),"Consumer - "+consumers+" threads: Time taken for each batch from creation to indexing","Producer Running Time","Time taken in Milliseconds",producerStats.getIntervals());
             shutdown.stopApplication();
         }
     }
