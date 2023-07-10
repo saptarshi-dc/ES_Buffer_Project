@@ -1,14 +1,12 @@
 package com.saptarshi.internshipproject.service;
 
-//import co.elastic.clients.elasticsearch.core.IndexRequest;
-//import co.elastic.clients.elasticsearch.ElasticsearchClient;
-//import co.elastic.clients.elasticsearch.core.IndexResponse;
-
 import com.saptarshi.internshipproject.bufferproducer.KafkaBufferProducer;
 import com.saptarshi.internshipproject.bufferproducer.MongoBufferProducer;
 import com.saptarshi.internshipproject.perfstats.ProducerStats;
 import com.saptarshi.internshipproject.requestgenerator.Generator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class ProducerScheduler {
-    @Value("${producer.batch.size}")
-    private int producerBatchSize;
+    @Value("${batch.size}")
+    private int batchSize;
     @Value("${buffer.type}")
     private String bufferType;
     private MongoBufferProducer mongoBufferProducer;
@@ -38,10 +36,11 @@ public class ProducerScheduler {
     private Integer intervalNo;
     private Long batchCountBefore;
     private Long batchCountAfter;
+    private static final Logger LOGGER= LoggerFactory.getLogger(ProducerScheduler.class);
     public void updateRate() {
         stopExecution();
         rate = generator.generateNewRate();
-        System.out.println("New rate=" + (60000 / (10*rate))*producerBatchSize + " documents per minute");
+        System.out.println("New rate=" + (60000 / (rate*10))*batchSize + " documents per minute");
         startExecution();
     }
 
@@ -50,6 +49,8 @@ public class ProducerScheduler {
         this.mongoBufferProducer=mongoBufferProducer;
         this.kafkaBufferProducer=kafkaBufferProducer;
         executorService = Executors.newSingleThreadScheduledExecutor();
+        batchCountBefore=0L;
+        batchCountAfter=0L;
         rate = 100;
         runningStatus=true;
         intervalNo=0;
@@ -62,29 +63,25 @@ public class ProducerScheduler {
         if(bufferType.equals("mongodb"))
         {
             batchCountBefore=(long)mongoBufferProducer.getBatchnumber();
-            producerTask = executorService.scheduleAtFixedRate(mongoBufferProducer::produce, 0, 10*rate, TimeUnit.MILLISECONDS);
+            producerTask = executorService.scheduleAtFixedRate(mongoBufferProducer::produce, 0, rate*10, TimeUnit.MILLISECONDS);
         }
         else {
             batchCountBefore=(long)kafkaBufferProducer.getBatchnumber();
-            producerTask = executorService.scheduleAtFixedRate(kafkaBufferProducer::produce, 0, 10*rate, TimeUnit.MILLISECONDS);
+            producerTask = executorService.scheduleAtFixedRate(kafkaBufferProducer::produce, 0, rate*10, TimeUnit.MILLISECONDS);
         }
-//        batchCountBefore=(long)mongoBufferProducer.getBatchnumber();
-//        batchCountBefore=(long)kafkaBufferProducer.getBatchnumber();
-//        producerTask = executorService.scheduleAtFixedRate(mongoBufferProducer::produce, 0, 10*rate, TimeUnit.MILLISECONDS);
-//        producerTask = executorService.scheduleAtFixedRate(kafkaBufferProducer::produce, 0, 10*rate, TimeUnit.MILLISECONDS);
     }
 
     public void stopExecution() {
         if (producerTask!=null) {
-            System.out.println("Trying to shut down producer");
+            LOGGER.info("Trying to shut down producer");
             try {
                 producerTask.cancel(false);
-                if(bufferType.equals("mongodb"))
-                    batchCountAfter=(long)mongoBufferProducer.getBatchnumber();
+                if (bufferType.equals("mongodb"))
+                    batchCountAfter = (long) mongoBufferProducer.getBatchnumber();
                 else
-                    batchCountAfter=(long)kafkaBufferProducer.getBatchnumber();
+                    batchCountAfter = (long) kafkaBufferProducer.getBatchnumber();
                 producerStats.insertIntervals(batchCountAfter);
-                producerStats.setBatchesCreatedPerMinute(intervalNo,batchCountAfter-batchCountBefore);
+                producerStats.setBatchesCreatedPerInterval(intervalNo, batchCountAfter - batchCountBefore);
             } catch (Exception e) {
             }
         }
@@ -97,33 +94,4 @@ public class ProducerScheduler {
     public void setRunningStatus(boolean runningStatus) {
         this.runningStatus = runningStatus;
     }
-
-    //    @Scheduled(fixedRate = 6)
-
-//    public ResponseEntity<List<Payload>>getAllDocs(){
-//        SearchRequest searchRequest=new SearchRequest("requests");
-//        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-//
-//        searchSourceBuilder.query(QueryBuilders.matchAllQuery()); // Match all documents
-//        searchSourceBuilder.size(10000);
-//        searchRequest.source(searchSourceBuilder);
-//
-//        try {
-//            SearchResponse searchResponse = client.search(searchRequest,RequestOptions.DEFAULT);
-//            SearchHit[] hits = searchResponse.getHits().getHits();
-//            List<Payload> documents = new ArrayList<>();
-//
-//            for(SearchHit hit:hits){
-//                String source=hit.getSourceAsString();
-//                Payload document=MAPPER.readValue(source,Payload.class);
-//                documents.add(document);
-//            }
-//            return ResponseEntity.ok(documents);
-//        } catch (IOException e) {
-//            LOG.error(e.getMessage(),e);
-//            List<Payload> payloadList = new ArrayList<>();
-//            ResponseEntity<List<Payload>> result = new ResponseEntity<>(payloadList, HttpStatus.INTERNAL_SERVER_ERROR);
-//            return result;
-//        }
-//    }
 }

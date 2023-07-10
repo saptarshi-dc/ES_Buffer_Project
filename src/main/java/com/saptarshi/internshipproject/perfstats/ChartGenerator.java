@@ -41,7 +41,7 @@ public class ChartGenerator {
         dataset.addSeries(series.getKey(), series.toArray());
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-                title,
+                bufferType.toUpperCase()+"/"+title,
                 xTitle,
                 yTitle,
                 dataset
@@ -81,7 +81,7 @@ public class ChartGenerator {
             }
         }
         try {
-            ChartUtils.saveChartAsJPEG(new File(savePath + bufferType+title + ".jpeg"), chart, 1500, 500);
+            ChartUtils.saveChartAsJPEG(new File(savePath + bufferType+"/"+title + ".jpeg"), chart, 1500, 500);
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -143,9 +143,11 @@ public class ChartGenerator {
 //        lineRenderer.setSeriesLinesVisible(0, true); // Hide lines
 //        lineRenderer.setSeriesShapesVisible(0, true); // Show data points as shapes
 //        lineRenderer.setSeriesShape(0, new Line2D.Double(-1, 0, 1, 0)); // Set the shape as a vertical line
+//        System.out.println("Intervals size="+intervals.size());
         for(int i=0;i<intervals.size()-1;i++)
         {
             long nreq=intervals.get(i+1)-intervals.get(i);
+//            System.out.println("intervals i="+intervals.get(i)+" intervals i+1="+intervals.get(i+1)+" nreq="+nreq);
             if(nreq<=0)
                 break;
             double gap=5/(1.0*nreq);

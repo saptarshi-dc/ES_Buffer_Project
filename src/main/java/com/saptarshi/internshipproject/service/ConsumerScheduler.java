@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,8 @@ public class ConsumerScheduler {
     private ScheduledFuture<?>[] consumerTask;
     @Autowired
     private ConsumerStats consumerStats;
+    @Autowired
+    private KafkaProperties kafkaProperties;
     private Integer iterationNo;
     private Long batchesConsumedBefore;
     private Long batchesConsumedAfter;
@@ -34,13 +37,11 @@ public class ConsumerScheduler {
     private ProducerScheduler producerScheduler;
     @Autowired
     private KafkaListenerEndpointRegistry endpointRegistry;
-        @Value("${listener.id}")
+    @Value("${listener.id}")
     private String listenerId;
     private boolean runningStatus;
-    @Value("${producer.batch.size}")
-    private int producerBatchSize;
-    @Value("${consumer.batch.size}")
-    private int consumerBatchSize;
+    @Value("${batch.size}")
+    private int batchSize;
     private int consumers;
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerScheduler.class);
 
@@ -49,8 +50,6 @@ public class ConsumerScheduler {
         this.mongoBufferConsumer = mongoBufferConsumer;
         this.kafkaBufferConsumer = kafkaBufferConsumer;
         this.consumers = consumers;
-//        consumers=10;
-//        consumerExecutorService = Executors.newSingleThreadScheduledExecutor();
         consumerExecutorService = Executors.newScheduledThreadPool(consumers);
         consumerStopExecutorService = Executors.newScheduledThreadPool(consumers);
         runningStatus = true;
@@ -58,7 +57,6 @@ public class ConsumerScheduler {
         iterationNo = 0;
     }
 
-    //    @Scheduled(fixedRate = 4000)
     public void mongoConsumerScheduler() {
         if (isRunningStatus() == false)
             return;
@@ -78,7 +76,7 @@ public class ConsumerScheduler {
                 if(finalI==consumers-1) {
                     batchesConsumedAfter = (long) mongoBufferConsumer.getBatchnumber();
                     consumerStats.setBatchesConsumedPerIteration(iterationNo, batchesConsumedAfter - batchesConsumedBefore);
-                    LOGGER.info("Number of documents indexed into Elasticsearch = {}", batchesConsumedAfter * consumerBatchSize);
+                    LOGGER.info("Number of documents indexed into Elasticsearch = {}", batchesConsumedAfter * batchSize);
                 }
                 if (producerScheduler.isRunningStatus() == false && MongoBufferProducer.getBatchnumber() <= MongoBufferConsumer.getBatchnumber()) {
                     setRunningStatus(false);
@@ -90,34 +88,26 @@ public class ConsumerScheduler {
     public void kafkaConsumerScheduler() {
         if (isRunningStatus() == false)
             return;
-        System.out.println("Hello");
         iterationNo++;
+
+        String partitionerClass = kafkaProperties.getProducer().getProperties().get("partitioner.class");
+        System.out.println("Partitioning Strategy: " + partitionerClass);
+
         batchesConsumedBefore = (long) kafkaBufferConsumer.getBatchnumber();
-//        MessageListenerContainer[] listenerContainer = new MessageListenerContainer[consumers];
-//        for(int i=0;i<consumers;i++) {
-//            String listenerId=""+i;
-//        System.out.println("hello");
-//            listenerContainer[i] = endpointRegistry.getListenerContainer(listenerId);
-//            System.out.println("Listener container="+listenerContainer[i].toString());
-//            listenerContainer[i].start();
-//        System.out.println("number of consumers="+endpointRegistry.getListenerContainers().size());
+
         endpointRegistry.getListenerContainer(listenerId).resume();
-//        System.out.println("started");
-//            int finalI = i;
+
         consumerStopExecutorService.schedule(() -> {
             System.out.println("Entered consumer shutdown");
-//                listenerContainer[finalI].stop();
             endpointRegistry.getListenerContainer(listenerId).pause();
             batchesConsumedAfter = (long) kafkaBufferConsumer.getBatchnumber();
             consumerStats.setBatchesConsumedPerIteration(iterationNo, batchesConsumedAfter - batchesConsumedBefore);
-            LOGGER.info("Number of documents indexed into Elasticsearch = {}", batchesConsumedAfter * consumerBatchSize);
+            LOGGER.info("Number of documents indexed into Elasticsearch = {}", batchesConsumedAfter * batchSize);
             if (producerScheduler.isRunningStatus() == false && KafkaBufferProducer.getBatchnumber() <= KafkaBufferConsumer.getBatchnumber()) {
                 setRunningStatus(false);
             }
         }, 20, TimeUnit.SECONDS);
     }
-
-//}
 
     public boolean isRunningStatus() {
         return runningStatus;

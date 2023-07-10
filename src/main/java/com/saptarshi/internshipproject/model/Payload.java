@@ -2,8 +2,6 @@ package com.saptarshi.internshipproject.model;
 
 import org.springframework.data.annotation.Id;
 
-
-//@Document
 public class Payload {
     @Id
     private Integer id;
@@ -15,9 +13,6 @@ public class Payload {
         return "Payload{" +
                 "id=" + id +
                 ", data='" + data + '\'' +
-//                ", creationTime=" + creationTime +
-//                ", bufferInsertionTime=" + bufferInsertionTime +
-//                ", esInsertionTime=" + esInsertionTime +
                 '}';
     }
 

@@ -1,33 +1,37 @@
 package com.saptarshi.internshipproject.requestgenerator;
 
 import com.saptarshi.internshipproject.model.Payload;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Component
 public class Generator {
     private Random random;
-    int index;
-    List<Integer> rates;
+    private int index;
+    private List<Integer> rates;
+    @Value("${partition.count}")
+    private int numPartitions;
+    private int nextPartition;
 
     public Generator() {
         random = new Random();
         index=-1;
+        nextPartition=0;
         rates=new ArrayList<Integer>() {{
             add(50);
             add(25);
-            add(10);
+            add(12);
             add(44);
             add(65);
             add(82);
+            add(10);
             add(36);
             add(97);
             add(78);
-            add(12);
-            add(100);
+            add(49);
+            add(75);
         }};
     }
 
@@ -49,11 +53,12 @@ public class Generator {
     }
 
     public int generateNewRate(){
-//        return 60;
         index++;
         if(index==rates.size())
             index=0;
         return rates.get(index);
     }
-
+    public int generatePartitionNumber(int batchnumber){
+        return batchnumber%numPartitions;
+    }
 }

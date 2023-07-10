@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -26,51 +25,45 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 public class MongoBufferConsumer {
-    @Value("${batch.size}")
-    private int batchsize;
     @Value("${buffer.collectionname}")
     private String collectionName;
+    @Value("${mongodb.index.name}")
+    private String indexName;
     @Autowired
     private MongoTemplate mongoTemplate;
     @Autowired
     private RestHighLevelClient client;
     @Autowired
     private ConsumerStats consumerStats;
-    @Value("${consumers}")
-    private int consumers;
     @Autowired
-    private ReentrantLock lock;
+    private ReentrantLock bufferLock;
     private boolean isCancelled;
     private static int batchnumber = 0;
-//    private int threadno;
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBufferConsumer.class);
+
 
     public void consume() {
         LOGGER.info("Starting new consumer:");
         isCancelled = false;
         while (!isCancelled) {
-//            long batchProcessingStartTime=System.nanoTime();
-//            lock.lock();
             long batchProcessingStartTime = System.currentTimeMillis();
             Query query = new Query();
-//            System.out.println("Thread number="+threadno);
-//            query.addCriteria(Criteria.where("batchnumber").mod(consumers,threadno));
             query.with(Sort.by(Sort.Direction.ASC, "batchnumber"));
-            lock.lock();
+            bufferLock.lock();
             Batch batch = mongoTemplate.findOne(query, Batch.class, collectionName);
             if (batch == null) {
-                lock.unlock();
+                bufferLock.unlock();
                 continue;
             }
             mongoTemplate.remove(batch, collectionName);
-            lock.unlock();
+            bufferLock.unlock();
 
             BulkRequest br = new BulkRequest();
 
             for (Payload request : batch.getRequests()) {
                 try {
-                    br.add(new IndexRequest("requests_index")
+                    br.add(new IndexRequest(indexName)
                             .id(String.valueOf(request.getId()))
                             .source(objectMapper.writeValueAsString(request), XContentType.JSON));
 
@@ -79,16 +72,13 @@ public class MongoBufferConsumer {
                 }
             }
 
-//            long batchProcessingEndTime=System.nanoTime();
             long batchProcessingEndTime = System.currentTimeMillis();
 
             try {
-//                long esInsertionStartTime=System.nanoTime();
                 long esInsertionStartTime = System.currentTimeMillis();
 
                 BulkResponse bulkResponse = client.bulk(br, RequestOptions.DEFAULT);
 
-//                long esInsertionEndTime=System.nanoTime();
                 long esInsertionEndTime = System.currentTimeMillis();
                 batchnumber++;
 
@@ -101,7 +91,6 @@ public class MongoBufferConsumer {
                 LOGGER.error(e.getMessage(), e);
             }
         }
-//        LOGGER.info("Number of documents indexed into Elasticsearch = {}", getBatchnumber() * batchsize);
     }
 
     public static int getBatchnumber() {
@@ -111,12 +100,4 @@ public class MongoBufferConsumer {
     public void setCancelled(boolean cancelled) {
         isCancelled = cancelled;
     }
-
-//    public int getThreadno() {
-//        return threadno;
-//    }
-//
-//    public void setThreadno(int threadno) {
-//        this.threadno = threadno;
-//    }
 }

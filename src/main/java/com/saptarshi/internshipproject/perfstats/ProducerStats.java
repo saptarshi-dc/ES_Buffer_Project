@@ -10,12 +10,12 @@ import java.util.Map;
 public class ProducerStats {
     private Map<Integer,Long>bufferBatchTime;
     private Map<Integer,Long>batchCreationTime;
-    private Map<Integer,Long>batchesCreatedPerMinute;
+    private Map<Integer,Long>batchesCreatedPerInterval;
     private List<Long> intervals;
     public ProducerStats(){
         bufferBatchTime=new CustomMap<>();
         batchCreationTime=new CustomMap<>();
-        batchesCreatedPerMinute=new CustomMap<>();
+        batchesCreatedPerInterval=new CustomMap<>();
         intervals=new ArrayList<>();
         intervals.add(1L);
     }
@@ -36,12 +36,12 @@ public class ProducerStats {
         batchCreationTime.put(batchnumber,time);
     }
 
-    public Map<Integer, Long> getBatchesCreatedPerMinute() {
-        return batchesCreatedPerMinute;
+    public Map<Integer, Long> getBatchesCreatedPerInterval() {
+        return batchesCreatedPerInterval;
     }
 
-    public void setBatchesCreatedPerMinute(Integer intervalNo, Long batchCount) {
-        batchesCreatedPerMinute.put(intervalNo,batchCount);
+    public void setBatchesCreatedPerInterval(Integer intervalNo, Long batchCount) {
+        batchesCreatedPerInterval.put(intervalNo,batchCount);
     }
 
     public List<Long> getIntervals() {

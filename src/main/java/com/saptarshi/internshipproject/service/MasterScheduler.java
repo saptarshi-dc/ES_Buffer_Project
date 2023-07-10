@@ -12,6 +12,7 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -87,24 +88,46 @@ public class MasterScheduler implements CommandLineRunner {
     public void stopExecution() {
         if (consumerScheduler.isRunningStatus()==false) {
             consumerTask.cancel(false);
+
             LOGGER.info("Time for each batch to be created:\n{}",producerStats.getBatchCreationTime().toString());
-//            LOGGER.info("Time for each batch to enter mongodb:\n{}",producerStats.getBufferBatchTime().toString());
             LOGGER.info("Time for each batch to enter kafka:\n{}",producerStats.getBufferBatchTime().toString());
-//            LOGGER.info("Average time for 1 batch from start to finish={}",MongoBufferConsumer.getTotalBatchIndexingTime().dividedBy(MongoBufferConsumer.getBatchnumber()));
-//            LOGGER.info("Time for each batch to be read from mongodb:\n{}",consumerStats.getBatchProcessingTime().toString());
             LOGGER.info("Time for each batch to be read from kafka:\n{}",consumerStats.getBatchProcessingTime().toString());
             LOGGER.info("Time for each batch to be indexed into elasticsearch:\n{}",consumerStats.getEsBatchTime().toString());
             LOGGER.info("Time for each batch from start to finish:\n{}",consumerStats.getBatchTotalTime().toString());
-//            LOGGER.info("Number of batches consumed per iteration:\n{}",consumerStats.getBatchesConsumedPerIteration().toString());
 
             chartGenerator.generateLineChart(producerStats.getBatchCreationTime(),"Producer: Batch Creation Time","Batch number","Time taken in Milliseconds");
             chartGenerator.generateLineChart(producerStats.getBufferBatchTime(),"Producer: Buffer Insertion Time","Batch number","Time taken in Milliseconds");
-            chartGenerator.generateLineChart(producerStats.getBatchesCreatedPerMinute(),"Producer: Number of batches created in every 5 seconds interval","Interval number","Number of batches created");
+            chartGenerator.generateLineChart(producerStats.getBatchesCreatedPerInterval(),"Producer: Number of batches created in every 5 seconds interval","Interval number","Number of batches created");
             chartGenerator.generateLineChart(consumerStats.getBatchProcessingTime(),"Consumer: Batch Processing Time","Batch number","Time taken in Milliseconds");
             chartGenerator.generateLineChart(consumerStats.getEsBatchTime(),"Consumer: ElasticSearch Indexing Time","Batch number","Time taken in Milliseconds");
             chartGenerator.generateLineChart(consumerStats.getBatchesConsumedPerIteration(),"Consumer: Number of batches consumed per iteration of consumer process","Iteration number","Number of batches consumed");
-//            chartGenerator.generateLineChartWithBackground(consumerStats.getBatchTotalTime(),"Consumer: Time taken for each batch from creation to indexing","Batch number","Time in Milliseconds",producerStats.getIntervals());
             chartGenerator.generateLineChartWithVertical(consumerStats.getBatchTotalTime(),"Consumer - "+consumers+" threads: Time taken for each batch from creation to indexing","Producer Running Time","Time taken in Milliseconds",producerStats.getIntervals());
+
+            long total=0;
+            List<Long> intervals=producerStats.getIntervals();
+            System.out.println("Intervals="+intervals);
+            for(int i=0;i<intervals.size()-1;i++){
+                if((intervals.get(i+1)-intervals.get(i))==0)
+                    break;
+                long totalTime=0L;
+                long j=(i==0)?intervals.get(i):intervals.get(i)+1;
+                for(;j<=intervals.get(i+1);j++){
+                    Long batchTotalTime=consumerStats.getBatchTotalTime().get((int)j);
+                    if(batchTotalTime!=null)
+                        totalTime+=batchTotalTime;
+                }
+                if(i==0) {
+                    total+=totalTime/(intervals.get(i+1)-intervals.get(i)+1);
+                    consumerStats.setAvgTotalTimePerIteration(i+1,totalTime/(intervals.get(i+1)-intervals.get(i)+1));
+                }
+                else {
+                    total+=totalTime/(intervals.get(i+1)-intervals.get(i));
+                    consumerStats.setAvgTotalTimePerIteration(i + 1, totalTime / (intervals.get(i + 1) - intervals.get(i)));
+                }
+            }
+
+            System.out.println("Average time across the graph= "+(total/ (intervals.size()-1)));
+            chartGenerator.generateLineChart(consumerStats.getAvgTotalTimePerIteration(),"Consumer - "+consumers+" threads:  Average total time taken per producer iteration","Producer iteration number","Time taken in Milliseconds");
             shutdown.stopApplication();
         }
     }

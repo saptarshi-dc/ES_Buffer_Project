@@ -5,10 +5,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.saptarshi.internshipproject.model.Batch;
 import com.saptarshi.internshipproject.model.Payload;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.saptarshi.internshipproject.model.Batch;
-import com.saptarshi.internshipproject.model.Payload;
 import com.saptarshi.internshipproject.perfstats.ProducerStats;
 import com.saptarshi.internshipproject.requestgenerator.Generator;
 import org.slf4j.Logger;
@@ -40,7 +36,6 @@ public class MongoBufferProducer implements BufferProducer {
     public void produce() {
         List<Payload> requests = new ArrayList<Payload>();
 
-//        long batchCreationStartTime=System.nanoTime();
         long batchCreationStartTime = System.currentTimeMillis();
 
         for (int i = 0; i < batchsize; i++) {
@@ -51,25 +46,19 @@ public class MongoBufferProducer implements BufferProducer {
         batch.setRequests(requests);
         batch.setSize(requests.size());
         batch.setBatchnumber(batchnumber+1);
-//        batch.setConsumedBy(0);
-
-//        long batchCreationEndTime=System.nanoTime();
         long batchCreationEndTime = System.currentTimeMillis();
         batch.setCreationTime(batchCreationEndTime);
 
         try {
-//            long bufferInsertionStartTime=System.nanoTime();
             long bufferInsertionStartTime = System.currentTimeMillis();
-//            batch.setBufferInsertionTime(bufferInsertionTime);
             mongoTemplate.save(batch, collectionName);
-//            long bufferInsertionEndTime=System.nanoTime();
+
             long bufferInsertionEndTime = System.currentTimeMillis();
             batchnumber++;
 
-            producerStats.setBatchCreationTime(batchnumber, batchCreationEndTime - batchCreationStartTime);
-            producerStats.setBufferBatchTime(batchnumber, bufferInsertionEndTime - bufferInsertionStartTime);
+            producerStats.setBatchCreationTime(batch.getBatchnumber(), batchCreationEndTime - batchCreationStartTime);
+            producerStats.setBufferBatchTime(batch.getBatchnumber(), bufferInsertionEndTime - bufferInsertionStartTime);
             LOGGER.info(String.format("Documents stored in mongodb=%d", batchnumber * batchsize));
-//            LOGGER.info("Average time for documents in batch number {} to enter mongodb= {}",produced/1000,Duration.between(creationTime,Instant.now()));
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -79,37 +68,3 @@ public class MongoBufferProducer implements BufferProducer {
         return batchnumber;
     }
 }
-
-
-//        batchPartitionSave(batch,batchCreationStartTime);
-//    }
-//    public void batchPartitionSave(Batch batch,long batchCreationStartTime){
-//        List<Payload>requests=batch.getRequests();
-//        List<Payload>partitionedRequests=new ArrayList<>();
-//        try {
-//            long bufferInsertionStartTime=System.currentTimeMillis();
-//            for (int i = 0; i < requests.size(); i++) {
-//                partitionedRequests.add(requests.get(i));
-//                if (i == requests.size() - 1 || partitionedRequests.size() == consumerBatchSize) {
-//                    Batch partitionedBatch = new Batch();
-//                    partitionedBatch.setRequests(partitionedRequests);
-//                    partitionedBatch.setSize(partitionedRequests.size());
-//                    partitionedBatch.setCreationTime(batch.getCreationTime());
-//                    partitionedBatch.setBatchnumber(batch.getBatchnumber());
-//                    mongoTemplate.save(partitionedBatch, collectionName);
-//                    partitionedRequests=new ArrayList<>();
-//                }
-//            }
-//            long bufferInsertionEndTime = System.currentTimeMillis();
-//
-//            docsProduced+=requests.size();
-//            producerStats.setBatchCreationTime(batchnumber, batch.getCreationTime() - batchCreationStartTime);
-//            producerStats.setBufferBatchTime(batchnumber, bufferInsertionEndTime - bufferInsertionStartTime);
-//            LOGGER.info(String.format("Documents stored in mongodb=%d",getDocsProduced()));
-//        }catch (final Exception e) {
-//            LOGGER.error(e.getMessage(), e);
-//        }
-//    }
-//    public static long getDocsProduced() {
-//        return docsProduced;
-//    }

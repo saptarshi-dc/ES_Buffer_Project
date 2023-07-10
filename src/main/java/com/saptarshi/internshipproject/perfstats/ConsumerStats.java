@@ -10,12 +10,14 @@ public class ConsumerStats {
     private Map<Integer,Long> batchProcessingTime;
     private Map<Integer,Long>batchesConsumedPerIteration;
     private Map<Integer,Long>batchTotalTime;
+    private Map<Integer,Long>avgTotalTimePerIteration;
 
     public ConsumerStats(){
         esBatchTime=new CustomMap<>();
         batchProcessingTime=new CustomMap<>();
         batchesConsumedPerIteration=new CustomMap<>();
         batchTotalTime=new CustomMap<>();
+        avgTotalTimePerIteration=new CustomMap<>();
     }
 
     public Map<Integer, Long> getEsBatchTime() {
@@ -48,5 +50,13 @@ public class ConsumerStats {
 
     public void setBatchTotalTime(Integer batchnumber, Long time) {
         batchTotalTime.put(batchnumber,time);
+    }
+
+    public Map<Integer, Long> getAvgTotalTimePerIteration() {
+        return avgTotalTimePerIteration;
+    }
+
+    public void setAvgTotalTimePerIteration(Integer iterationNo, Long time) {
+        avgTotalTimePerIteration.put(iterationNo,time);
     }
 }
