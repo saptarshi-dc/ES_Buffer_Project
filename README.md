@@ -1,6 +1,6 @@
 # ES_Buffer_Project
 
-### Internship project for Saptarshi De Chaudhury, Using Buffer to index data into ElasticSearch
+## Internship project for Saptarshi De Chaudhury, Using Buffer to index data into ElasticSearch
 
 #### Used scheduling in Spring to schedule Producer and Consumer, producing batches of documents to the buffer and consuming them and indexing into ElasticSearch.
 
