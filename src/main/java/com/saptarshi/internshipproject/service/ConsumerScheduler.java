@@ -90,9 +90,6 @@ public class ConsumerScheduler {
             return;
         iterationNo++;
 
-        String partitionerClass = kafkaProperties.getProducer().getProperties().get("partitioner.class");
-        System.out.println("Partitioning Strategy: " + partitionerClass);
-
         batchesConsumedBefore = (long) kafkaBufferConsumer.getBatchnumber();
 
         endpointRegistry.getListenerContainer(listenerId).resume();

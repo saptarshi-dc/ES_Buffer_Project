@@ -28,16 +28,13 @@ public class MongoBufferProducer implements BufferProducer {
     @Autowired
     private MongoTemplate mongoTemplate;
     @Autowired
-    private Generator generator;
+    public Generator generator;
     private static int batchnumber = 0;
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBufferProducer.class);
-
     public void produce() {
         List<Payload> requests = new ArrayList<Payload>();
-
         long batchCreationStartTime = System.currentTimeMillis();
-
         for (int i = 0; i < batchsize; i++) {
             Payload payload = generator.generatePayload();
             requests.add(payload);
@@ -66,5 +63,12 @@ public class MongoBufferProducer implements BufferProducer {
 
     public static int getBatchnumber(){
         return batchnumber;
+    }
+    public void setBatchSize(int batchsize){
+        this.batchsize=batchsize;
+    }
+
+    public void setCollectionName(String collectionName) {
+        this.collectionName = collectionName;
     }
 }

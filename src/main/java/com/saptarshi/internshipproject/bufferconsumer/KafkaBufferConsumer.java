@@ -38,7 +38,6 @@ public class KafkaBufferConsumer{
 
     @KafkaListener(id="kafkaBuffer",topics = "requestcollection", groupId = "consumerGroup",autoStartup = "true")
     public void consume(Batch batch, Acknowledgment acknowledgment) {
-
         long batchProcessingStartTime=System.currentTimeMillis();
         BulkRequest br = new BulkRequest();
         for (Payload request : batch.getRequests()) {
@@ -73,6 +72,9 @@ public class KafkaBufferConsumer{
         return batchnumber;
     }
 
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
+    }
     public void setCancelled(boolean cancelled) {
         isCancelled = cancelled;
     }

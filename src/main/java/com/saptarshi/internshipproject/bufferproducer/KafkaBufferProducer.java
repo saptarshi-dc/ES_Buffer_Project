@@ -67,5 +67,8 @@ public class KafkaBufferProducer implements BufferProducer{
     public static int getBatchnumber() {
         return batchnumber;
     }
+    public void setBatchSize(int batchsize){
+        this.batchsize=batchsize;
+    }
 }
 

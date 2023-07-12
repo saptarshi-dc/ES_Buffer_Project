@@ -89,10 +89,10 @@ public class MasterScheduler implements CommandLineRunner {
         if (consumerScheduler.isRunningStatus()==false) {
             consumerTask.cancel(false);
 
-            LOGGER.info("Time for each batch to be created:\n{}",producerStats.getBatchCreationTime().toString());
-            LOGGER.info("Time for each batch to enter kafka:\n{}",producerStats.getBufferBatchTime().toString());
-            LOGGER.info("Time for each batch to be read from kafka:\n{}",consumerStats.getBatchProcessingTime().toString());
-            LOGGER.info("Time for each batch to be indexed into elasticsearch:\n{}",consumerStats.getEsBatchTime().toString());
+//            LOGGER.info("Time for each batch to be created:\n{}",producerStats.getBatchCreationTime().toString());
+//            LOGGER.info("Time for each batch to enter buffer:\n{}",producerStats.getBufferBatchTime().toString());
+//            LOGGER.info("Time for each batch to be read from buffer:\n{}",consumerStats.getBatchProcessingTime().toString());
+//            LOGGER.info("Time for each batch to be indexed into elasticsearch:\n{}",consumerStats.getEsBatchTime().toString());
             LOGGER.info("Time for each batch from start to finish:\n{}",consumerStats.getBatchTotalTime().toString());
 
             chartGenerator.generateLineChart(producerStats.getBatchCreationTime(),"Producer: Batch Creation Time","Batch number","Time taken in Milliseconds");
@@ -105,7 +105,6 @@ public class MasterScheduler implements CommandLineRunner {
 
             long total=0;
             List<Long> intervals=producerStats.getIntervals();
-            System.out.println("Intervals="+intervals);
             for(int i=0;i<intervals.size()-1;i++){
                 if((intervals.get(i+1)-intervals.get(i))==0)
                     break;
@@ -126,7 +125,6 @@ public class MasterScheduler implements CommandLineRunner {
                 }
             }
 
-            System.out.println("Average time across the graph= "+(total/ (intervals.size()-1)));
             chartGenerator.generateLineChart(consumerStats.getAvgTotalTimePerIteration(),"Consumer - "+consumers+" threads:  Average total time taken per producer iteration","Producer iteration number","Time taken in Milliseconds");
             shutdown.stopApplication();
         }

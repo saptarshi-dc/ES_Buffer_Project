@@ -42,9 +42,7 @@ public class MongoBufferConsumer {
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoBufferConsumer.class);
 
-
     public void consume() {
-        LOGGER.info("Starting new consumer:");
         isCancelled = false;
         while (!isCancelled) {
             long batchProcessingStartTime = System.currentTimeMillis();
@@ -58,30 +56,23 @@ public class MongoBufferConsumer {
             }
             mongoTemplate.remove(batch, collectionName);
             bufferLock.unlock();
-
             BulkRequest br = new BulkRequest();
-
             for (Payload request : batch.getRequests()) {
                 try {
                     br.add(new IndexRequest(indexName)
                             .id(String.valueOf(request.getId()))
                             .source(objectMapper.writeValueAsString(request), XContentType.JSON));
-
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage(), e);
                 }
             }
-
             long batchProcessingEndTime = System.currentTimeMillis();
 
             try {
                 long esInsertionStartTime = System.currentTimeMillis();
-
                 BulkResponse bulkResponse = client.bulk(br, RequestOptions.DEFAULT);
-
                 long esInsertionEndTime = System.currentTimeMillis();
                 batchnumber++;
-
                 consumerStats.setBatchProcessingTime(batch.getBatchnumber(), batchProcessingEndTime - batchProcessingStartTime);
                 consumerStats.setEsBatchTime(batch.getBatchnumber(), esInsertionEndTime - esInsertionStartTime);
                 consumerStats.setBatchTotalTime(batch.getBatchnumber(), esInsertionEndTime - batch.getCreationTime());
@@ -99,5 +90,11 @@ public class MongoBufferConsumer {
 
     public void setCancelled(boolean cancelled) {
         isCancelled = cancelled;
+    }
+    public void setCollectionName(String collectionName) {
+        this.collectionName = collectionName;
+    }
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
     }
 }

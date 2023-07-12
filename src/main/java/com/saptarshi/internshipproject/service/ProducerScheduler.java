@@ -73,7 +73,7 @@ public class ProducerScheduler {
 
     public void stopExecution() {
         if (producerTask!=null) {
-            LOGGER.info("Trying to shut down producer");
+            LOGGER.info("Restarting producer");
             try {
                 producerTask.cancel(false);
                 if (bufferType.equals("mongodb"))

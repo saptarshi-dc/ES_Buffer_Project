@@ -15,7 +15,6 @@ public class Payload {
                 ", data='" + data + '\'' +
                 '}';
     }
-
     public Integer getId() {
         return id;
     }

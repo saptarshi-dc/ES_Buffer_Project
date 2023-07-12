@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.saptarshi.internshipproject.bufferproducer.KafkaBufferProducerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-07-12T12:40:57" hostname="saptarshi.dechaudhury-C02F62KLMD6N" time="0.983">
+  <properties/>
+  <testcase name="checkProducer()" classname="com.saptarshi.internshipproject.bufferproducer.KafkaBufferProducerTest" time="0.983"/>
+  <system-out><![CDATA[18:10:58.890 [Test worker] INFO com.saptarshi.internshipproject.bufferproducer.KafkaBufferProducer - Documents stored in kafka=1000
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
