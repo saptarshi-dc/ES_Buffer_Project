@@ -10,10 +10,10 @@
 #### Used single as well as multiple consumers to analyse the scalability of the system.
 
 
-##### To run the code, need to pass arguments for name of Buffer to be used. The argument will be injected into the application.properties file.
+#### To run the code, need to pass arguments for name of Buffer to be used. The argument will be injected into the application.properties file.
 
---buffer.type=mongodb 
+- --buffer.type=mongodb 
 
 or
 
---buffer.type=kafka
+- --buffer.type=kafka
